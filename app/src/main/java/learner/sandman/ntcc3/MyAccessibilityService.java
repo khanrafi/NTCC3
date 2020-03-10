@@ -364,10 +364,6 @@ public class MyAccessibilityService extends AccessibilityService implements Came
 			}
 		}
 
-
-
-
-
 		//*******************IF THERE ARE PREVIOUS FEATURES STH MAGICAL IS ABOUT TO HAPPEN**************//
 		Message msg=new Message();
 

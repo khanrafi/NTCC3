@@ -101,6 +101,9 @@ public class MyAccessibilityService extends AccessibilityService implements Came
 
 		inflater.inflate(R.layout.cursor_layout,cursorFrameLayout);
 
+
+
+
 		//use cursorFramlayout instead of cursor view
 		myWindowManager.addView(cursorFrameLayout,cursorParams);
 
@@ -119,35 +122,73 @@ public class MyAccessibilityService extends AccessibilityService implements Came
 				ImageView cusor=cursorFrameLayout.findViewById(R.id.cursor_view);
 
 				switch (msg.what){
+					//****************FOR LEFT MOVEMENT*******************//
 					case 1://left
 
 						cusor.setBackgroundColor(Color.BLACK);
-						cursorParams.x+=20;
+						cursorParams.x+=30;
 						if(cursorParams.x>screenWidth){
 							cursorParams.x=screenWidth;
 						}
 						Log.d("TAG5","should go left");
 						break;
-					case 2://right
+					case 2://left
 
 						cusor.setBackgroundColor(Color.BLACK);
-						cursorParams.x-=20;
+						cursorParams.x+=10;
+						if(cursorParams.x>screenWidth){
+							cursorParams.x=screenWidth;
+						}
+						Log.d("TAG5","should go left");
+						break;
+					//********************FOR RIGHT MOVEMENT******************//
+					case 3://right
+
+						cusor.setBackgroundColor(Color.BLACK);
+						cursorParams.x-=30;
 						if(cursorParams.x<0){
 							cursorParams.x=0;
 						}
 						Log.d("TAG5","should go right");
 						break;
-					case 3://down
+					case 4://right
+
 						cusor.setBackgroundColor(Color.BLACK);
-						cursorParams.y+=20;
+						cursorParams.x-=10;
+						if(cursorParams.x<0){
+							cursorParams.x=0;
+						}
+						Log.d("TAG5","should go right");
+						break;
+					//********************FOR DOWN MOVEMENT*******************//
+					case 5://down
+						cusor.setBackgroundColor(Color.BLACK);
+						cursorParams.y+=30;
 						if(cursorParams.y>screenHeight){
 							cursorParams.y=screenHeight;
 						}
 						Log.d("TAG5","should go down");
 						break;
-					case 4://up
+					case 6://down
 						cusor.setBackgroundColor(Color.BLACK);
-						cursorParams.y-=20;
+						cursorParams.y+=10;
+						if(cursorParams.y>screenHeight){
+							cursorParams.y=screenHeight;
+						}
+						Log.d("TAG5","should go down");
+						break;
+					//******************FOR UP MOVEMENT*******************//
+					case 7://up
+						cusor.setBackgroundColor(Color.BLACK);
+						cursorParams.y-=30;
+						if(cursorParams.y>screenHeight){
+							cursorParams.y=0;
+						}
+						Log.d("TAG5","should go up");
+						break;
+					case 8://up
+						cusor.setBackgroundColor(Color.BLACK);
+						cursorParams.y-=10;
 						if(cursorParams.y>screenHeight){
 							cursorParams.y=0;
 						}
@@ -312,6 +353,14 @@ public class MyAccessibilityService extends AccessibilityService implements Came
 
 		Imgproc.rectangle(mRgba,centralRectangle.tl(),centralRectangle.br(),new Scalar(100),3);
 
+		Rect centralRectangleOuter=new Rect(new Point(centrePoint.x-50,centrePoint.y-50),
+				new Point(centrePoint.x+50,centrePoint.y+50));
+
+
+		Imgproc.rectangle(mRgba,centralRectangleOuter.tl(),centralRectangleOuter.br(),new Scalar(100),3);
+
+
+
 		//*******************FRAME HANDLING NUMERICALLY********************//
 		if(frameCount%20==0){
 
@@ -364,40 +413,67 @@ public class MyAccessibilityService extends AccessibilityService implements Came
 			}
 		}
 
-		//*******************IF THERE ARE PREVIOUS FEATURES STH MAGICAL IS ABOUT TO HAPPEN**************//
-		Message msg=new Message();
+		if(firstTeethDetected==false){
+			//*******************IF THERE ARE PREVIOUS FEATURES STH MAGICAL IS ABOUT TO HAPPEN**************//
+			Message msg=new Message();
+			if(presentFeatures.toArray().length!=0){
 
-		if(presentFeatures.toArray().length!=0){
-			if(centrePoint.x-presentFeatures.toArray()[0].x<-30 ){
-				//o means left
-				Log.d("TAG5","LEFT");
-				msg.what=1;
-			}else if(centrePoint.x-presentFeatures.toArray()[0].x>30){
-				//1 means right
-				Log.d("TAG5","RIGHT");
-				msg.what=2;
-			}else if(centrePoint.y-presentFeatures.toArray()[0].y<-30){
-				//o means down
-				Log.d("TAG5","DOWN");
-				msg.what=3;
-			}else if(centrePoint.y-presentFeatures.toArray()[0].y>30){
-				//1 means up
-				Log.d("TAG5","UP");
-				msg.what=4;
-			}else{
-				msg.what=-1;
-
+				//***********FOR LEFT MOVEMENT******************
+				if(centrePoint.x-presentFeatures.toArray()[0].x<-50 ){
+					//o means left
+					Log.d("TAG5","LEFT");
+					msg.what=1;
+				}else if(centrePoint.x-presentFeatures.toArray()[0].x<-30 ){
+					//o means left
+					Log.d("TAG5","LEFT");
+					msg.what=2;
+				}
+				//***********FOR RIGHT MOVEMENT******************
+				else if(centrePoint.x-presentFeatures.toArray()[0].x>50){
+					//1 means right
+					Log.d("TAG5","RIGHT");
+					msg.what=3;
+				}
+				else if(centrePoint.x-presentFeatures.toArray()[0].x>30){
+					//1 means right
+					Log.d("TAG5","RIGHT");
+					msg.what=4;
+				}
+				//******************FOR DOWN MOVEMENT*************************//
+				else if(centrePoint.y-presentFeatures.toArray()[0].y<-50){
+					//o means down
+					Log.d("TAG5","DOWN");
+					msg.what=5;
+				}
+				else if(centrePoint.y-presentFeatures.toArray()[0].y<-30){
+					//o means down
+					Log.d("TAG5","DOWN");
+					msg.what=6;
+				}
+				//*********************FOR UP MOVEMENT**************************//
+				else if(centrePoint.y-presentFeatures.toArray()[0].y>50){
+					//1 means up
+					Log.d("TAG5","UP");
+					msg.what=7;
+				}
+				else if(centrePoint.y-presentFeatures.toArray()[0].y>30){
+					//1 means up
+					Log.d("TAG5","UP");
+					msg.what=8;
+				}
+				//**************************IF NO MOVEMENT******************************//
+				else{
+					msg.what=-1;
+				}
 			}
+			handler.sendMessage(msg);
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			//************HANDLER MESSAGING ENDS HERE**********************//
 
-		}
-
-
-
-		handler.sendMessage(msg);
-		try {
-			Thread.sleep(10);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
 		}
 
 		//******************THIS IS THE CODE FOR CLICKING*************************//
@@ -412,7 +488,7 @@ public class MyAccessibilityService extends AccessibilityService implements Came
 							new Size(),
 							new Size());
 		}
-
+		//********************TEETH DETECTION CODE STARTS HERE*************************//
 		Rect[] teethArray = teeth.toArray();
 		//if there is any teeth in the image
 		if(teethArray.length>0 && firstTeethDetected==false){
@@ -433,7 +509,7 @@ public class MyAccessibilityService extends AccessibilityService implements Came
 				//if there is still teeth showing
 				if(teethArray.length>0){
 					Path swipePath = new Path();
-					swipePath.moveTo(cursorParams.x+40, cursorParams.y+40);
+					swipePath.moveTo(cursorParams.x+40, cursorParams.y+110);
 
 					GestureDescription.Builder gestureBuilder = new GestureDescription.Builder();
 					gestureBuilder.addStroke(new GestureDescription.StrokeDescription(swipePath, 0, 150));
@@ -443,43 +519,13 @@ public class MyAccessibilityService extends AccessibilityService implements Came
 
 		}
 		//************CODE FOR TEETH DETECTION AND CLICKING ENDS HERE***********************//
-
-
 		return mRgba;
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	@Override
 	public void onAccessibilityEvent(AccessibilityEvent event) {
-
 	}
-
 	@Override
 	public void onInterrupt() {
-
 	}
 
 }

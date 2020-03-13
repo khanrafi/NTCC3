@@ -1,0 +1,264 @@
+  
+#include <SoftwareSerial.h>
+#include "VoiceRecognitionV3.h"
+#include <Servo.h>
+
+
+
+VR myVR(2,3);    // 2:RX 3:TX, you can choose your favourite pins.
+
+uint8_t records[7]; // save record
+uint8_t buf[64];
+Servo myservo;
+
+#define ON          (0)
+#define off         (1)
+#define left        (2)
+#define right       (3)
+#define servoLeft   (4)
+#define servoRight  (5)
+// connect motor controller pins to Arduino digital pins
+// motor one
+int enA = A1;
+int enB = A0;
+int in2 = 8;
+// motor two
+int in1 = 5;
+int in3 = 7;
+int in4 = 6;
+int servoPin = 11;
+
+const int trigPin = 12;
+const int echoPin = 13;
+
+long duration;
+int distance;
+
+void printSignature(uint8_t *buf, int len)
+{
+  int i;
+  for(i=0; i<len; i++){
+    if(buf[i]>0x19 && buf[i]<0x7F){
+      Serial.write(buf[i]);
+    }
+    else{
+      Serial.print("[");
+      Serial.print(buf[i], HEX);
+      Serial.print("]");
+    }
+  }
+}
+void printVR(uint8_t *buf)
+{
+  Serial.println("VR Index\tGroup\tRecordNum\tSignature");
+
+  Serial.print(buf[2], DEC);
+  Serial.print("\t\t");
+
+  if(buf[0] == 0xFF){
+    Serial.print("NONE");
+  }
+  else if(buf[0]&0x80){
+    Serial.print("UG ");
+    Serial.print(buf[0]&(~0x80), DEC);
+  }
+  else{
+    Serial.print("SG ");
+    Serial.print(buf[0], DEC);
+  }
+  Serial.print("\t");
+
+  Serial.print(buf[1], DEC);
+  Serial.print("\t\t");
+  if(buf[3]>0){
+    printSignature(buf+4, buf[3]);
+  }
+  else{
+    Serial.print("NONE");
+  }
+  Serial.println("\r\n");
+}
+
+void setup()
+{
+  // set all the motor control pins to outputs
+  pinMode(enA, OUTPUT);
+  pinMode(enB, OUTPUT);
+  pinMode(in1, OUTPUT);
+  pinMode(in2, OUTPUT);
+  pinMode(in3, OUTPUT);
+  pinMode(in4, OUTPUT);
+
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(servoPin, OUTPUT);
+  myservo.attach(servoPin);
+
+   /** initialize */
+  myVR.begin(9600);
+  Serial.begin(115200);
+  Serial.println("Elechouse Voice Recognition V3 Module\r\nControl LED sample");
+    
+  if(myVR.clear() == 0){
+    Serial.println("Recognizer cleared.");
+  }else{
+    Serial.println("Not find VoiceRecognitionModule.");
+    Serial.println("Please check connection and restart Arduino.");
+    //while(1);
+  }
+  
+  if(myVR.load((uint8_t)ON) >= 0){
+    Serial.println("ON loaded");
+  }
+  if(myVR.load((uint8_t)off) >= 0){
+    Serial.println("off loaded");
+  }
+  if(myVR.load((uint8_t)left) >= 0){
+    Serial.println("left loaded");
+  }
+  if(myVR.load((uint8_t)right) >= 0){
+    Serial.println("right loaded");
+  }
+  if(myVR.load((uint8_t)servoLeft) >= 0){
+    Serial.println("servoLeft loaded");
+  }
+  if(myVR.load((uint8_t)servoRight) >= 0){
+    Serial.println("servoRight loaded");
+  }
+}
+void forward(){
+ // int d = getDistance();
+  digitalWrite(in1,HIGH);
+    digitalWrite(in2, LOW);
+    analogWrite(enA, 180);
+    digitalWrite(in3,HIGH);
+    digitalWrite(in4, LOW);
+    analogWrite(enB, 180);
+    delay(1000);
+//  for(int i = 0; i<10 && d>30; i++)
+//  {
+//    digitalWrite(in1,HIGH);
+//    digitalWrite(in2, LOW);
+//    analogWrite(enA, 180);
+//    digitalWrite(in3,HIGH);
+//    digitalWrite(in4, LOW);
+//    analogWrite(enB, 180);
+//    delay(100);
+//   // d = getDistance();
+//  }
+    digitalWrite(in1, LOW);
+    digitalWrite(in2, LOW); 
+    digitalWrite(in3, LOW);
+    digitalWrite(in4, LOW);  
+    delay(100);
+}
+void backward(){
+
+  digitalWrite(in1,LOW);
+  digitalWrite(in2, HIGH);
+  digitalWrite(enA, HIGH);
+  digitalWrite(in3,LOW);
+  digitalWrite(in4, HIGH);
+  digitalWrite(enB, HIGH);
+  delay(500);
+
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, LOW); 
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, LOW);  
+  delay(100);
+  
+}
+void MoveLeft(){
+  digitalWrite(in1,LOW);
+  digitalWrite(in2, HIGH);
+  analogWrite(enA, 150);
+  digitalWrite(in3,HIGH);
+  digitalWrite(in4, LOW);
+  analogWrite(enB, 150);
+  delay(250);
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, LOW); 
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, LOW);  
+  delay(100);
+}
+void MoveRight(){
+  digitalWrite(in1,HIGH);
+  digitalWrite(in2, LOW);
+  analogWrite(enA, 150);
+  digitalWrite(in3,LOW);
+  digitalWrite(in4, HIGH);
+  analogWrite(enB, 150);
+  delay(250);
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, LOW); 
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, LOW);
+  delay(100);
+}
+void loop()
+{
+//    forward();
+  int ret;
+  int pos; 
+  int d = getDistance();
+  ret = myVR.recognize(buf, 50);
+
+   if(ret>0){
+    switch(buf[1]){
+        case ON:
+        forward();    
+        break;
+        case off: 
+        backward();
+        break;
+        case left:
+          MoveLeft();
+        break;
+        case right:
+          MoveRight();
+        break; 
+        case servoLeft:
+          for (pos = pos; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
+          // in steps of 1 degree
+            myservo.write(pos);              // tell servo to go to position in variable 'pos'
+            delay(60);   
+          }
+          Serial.println("ServoLeft found");
+          myservo.write(pos);
+        break;
+        case servoRight:
+          for (pos = pos; pos >= 0; pos -= 1) { 
+            // in steps of 1 degree
+            myservo.write(pos);              // tell servo to go to position in variable 'pos'
+            delay(60);                       // waits 100ms for the servo to reach the position
+          }
+          myservo.write(pos);
+        break;
+        
+      default:
+        break;
+    }
+    /** voice recognized */
+ 
+    printVR(buf);
+  }
+}
+int getDistance()
+{
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  
+  duration = pulseIn(echoPin, HIGH);
+  distance = duration * 0.034 / 2;
+
+  Serial.print("Distance: ");
+  Serial.println(distance);
+
+  return distance;
+}
